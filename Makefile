@@ -34,6 +34,15 @@ ct-tls:
 		--suite eredis_tls_SUITE || { docker logs redis; exit 1; }
 	@docker rm -f redis
 
+ct-tls-expire:
+	@priv/update-server-cert.sh server
+	-@docker rm -f redis-expire
+	@docker run --name redis-expire -d --net=host -v $(shell pwd)/priv/configs:/conf:ro \
+		redis:$(REDIS_VERSION) redis-server /conf/redis_tls.conf
+	@rebar3 ct -v --cover_export_name ct-tls \
+		--suite eredis_tls_expire_SUITE || { docker logs redis-expire; exit 1; }
+	@docker rm -f redis-expire
+
 edoc:
 	@rebar3 edoc skip_deps=true
 
